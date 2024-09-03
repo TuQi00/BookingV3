@@ -1,65 +1,125 @@
 const Service = require('../models/Service');
+const Subservice = require('../models/Subservice');
 
 exports.addSubservice = async (req, res) => {
   const { serviceId } = req.params;
   const { name, description, price } = req.body;
 
-  const service = await Service.findById(serviceId);
-  if (!service) {
-    return res.status(404).json({ msg: 'Service not found' });
-  }
+  try {
+    const service = await Service.findById(serviceId);
+    if (!service) {
+      return res.status(404).json({ msg: 'Service not found' });
+    }
 
-  const newSubservice = { name, description, price };
-  service.subservices.push(newSubservice);
-  await service.save();
-  res.status(201).json(service);
+    const subserviceExists = await Subservice.findOne({ name, service: serviceId });
+    if (subserviceExists) {
+      return res.status(400).json({ message: 'SubService already exists in this service' });
+    }
+
+    const newSubservice = new Subservice({
+      name,
+      description,
+      price,
+      service: serviceId,
+    });
+
+    await newSubservice.save();
+
+    res.status(201).json(newSubservice);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
 };
 
+
 exports.updateSubservice = async (req, res) => {
-  const { serviceId, subserviceId } = req.params;
-  const { name, description, price } = req.body;
+  const { subserviceId } = req.params;
+  const { name, description, price, serviceId } = req.body;
 
-  const service = await Service.findById(serviceId);
-  if (!service) {
-    return res.status(404).json({ msg: 'Service not found' });
+  try {
+    // Kiểm tra xem Subservice có tồn tại không
+    const subservice = await Subservice.findById(subserviceId);
+    if (!subservice) {
+      return res.status(404).json({ msg: 'Subservice not found' });
+    }
+
+    // Nếu serviceId được cung cấp, kiểm tra xem Service có tồn tại không
+    if (serviceId) {
+      const service = await Service.findById(serviceId);
+      if (!service) {
+        return res.status(404).json({ msg: 'Service not found' });
+      }
+    }
+
+    // Cập nhật thông tin Subservice
+    if (name) subservice.name = name;
+    if (description) subservice.description = description;
+    if (price) subservice.price = price;
+    if (serviceId) subservice.service = serviceId;
+
+    await subservice.save();
+
+    res.status(200).json(subservice);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
   }
-
-  const subservice = service.subservices.id(subserviceId);
-  if (!subservice) {
-    return res.status(404).json({ msg: 'Subservice not found' });
-  }
-
-  subservice.name = name || subservice.name;
-  subservice.description = description || subservice.description;
-  subservice.price = price || subservice.price;
-
-  await service.save();
-  res.json(service);
 };
 
 exports.deleteSubservice = async (req, res) => {
-  const { serviceId, subserviceId } = req.params;
+  const { subserviceId } = req.params;
 
-  const service = await Service.findById(serviceId);
-  if (!service) {
-    return res.status(404).json({ msg: 'Service not found' });
+  try {
+    // Kiểm tra xem Subservice có tồn tại không
+    const subservice = await Subservice.findById(subserviceId);
+    if (!subservice) {
+      return res.status(404).json({ msg: 'Subservice not found' });
+    }
+
+    // Xóa Subservice
+    await Subservice.findByIdAndDelete(subserviceId);
+
+    res.status(200).json({ msg: 'Subservice removed' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
   }
-
-  service.subservices.id(subserviceId).remove();
-  await service.save();
-  res.json({ msg: 'Subservice removed' });
 };
+
 
 exports.getSubservicesByServiceId = async (req, res) => {
   const { serviceId } = req.params;
 
   try {
-    const service = await Service.findById(serviceId).select('subservices');
+    // Kiểm tra xem service có tồn tại hay không
+    const service = await Service.findById(serviceId);
     if (!service) {
       return res.status(404).json({ msg: 'Service not found' });
     }
 
-    res.json(service.subservices);
+    // Truy vấn các subservices thuộc serviceId
+    const subservices = await Subservice.find({ service: serviceId });
+
+    res.status(200).json(subservices);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+};
+
+exports.detailSubservice = async (req, res) => {
+  const { subserviceId } = req.params;
+
+  try {
+    // Kiểm tra xem Subservice có tồn tại không
+    const subservice = await Subservice.findById(subserviceId);
+    if (!subservice) {
+      return res.status(404).json({ msg: 'Subservice not found' });
+    }
+
+    // Trả về thông tin chi tiết của Subservice
+    res.status(200).json(subservice);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
