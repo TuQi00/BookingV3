@@ -22,8 +22,8 @@ const BookingForm = () => {
       try {
         console.log(email,22);
         
-        // const response = await axios.post('http://localhost:5000/api/users/check', { email });
-        // console.log('Email validation response:', response.data); // Add log here
+        const response = await axios.post('http://localhost:5000/api/users/check', { email });
+        console.log('Email validation response:', response.data); // Add log here
         setEmailValid(true);
         setStep(2);
       } catch (error) {                                                                                                                                                                                                 
