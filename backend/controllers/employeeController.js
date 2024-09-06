@@ -1,11 +1,19 @@
 // controllers/employeeController.js
-const Employee = require('../models/Employee');
+const Employee = require("../models/Employee");
+const { checkExist } = require("../helper/checkExist");
 
 // Tạo nhân viên mới
 exports.createEmployee = async (req, res) => {
   const { name, availability } = req.body;
 
   try {
+    const employeeExists = await checkExist(Employee, { name });
+
+    if (employeeExists) {
+      return res.status(400).json({
+        message: "Employee already exists",
+      });
+    }
     const newEmployee = new Employee({
       name,
       availability,
@@ -15,7 +23,7 @@ exports.createEmployee = async (req, res) => {
     res.status(201).json(newEmployee);
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ msg: 'Error creating employee.' });
+    res.status(500).json({ msg: "Error creating employee." });
   }
 };
 
@@ -26,7 +34,7 @@ exports.getAllEmployees = async (req, res) => {
     res.status(200).json(employees);
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ msg: 'Error retrieving employees.' });
+    res.status(500).json({ msg: "Error retrieving employees." });
   }
 };
 
@@ -35,45 +43,49 @@ exports.getEmployeeById = async (req, res) => {
   try {
     const employee = await Employee.findById(req.params.employeeID);
     if (!employee) {
-      return res.status(404).json({ msg: 'Employee not found.' });
+      return res.status(404).json({ msg: "Employee not found." });
     }
     res.status(200).json(employee);
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ msg: 'Error retrieving employee.' });
+    res.status(500).json({ msg: "Error retrieving employee." });
   }
 };
 
 // Cập nhật thông tin nhân viên theo ID
 exports.updateEmployee = async (req, res) => {
   try {
+    console.log(req.body);
+
     const employee = await Employee.findByIdAndUpdate(
-      req.params.id,
+      req.params.employeeID,
       { $set: req.body },
       { new: true }
     );
-    
+
     if (!employee) {
-      return res.status(404).json({ msg: 'Employee not found.' });
+      console.log(employee);
+
+      return res.status(404).json({ msg: "Employee not found." });
     }
     res.status(200).json(employee);
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ msg: 'Error updating employee.' });
+    res.status(500).json({ msg: "Error updating employee." });
   }
 };
 
 // Xóa nhân viên theo ID
 exports.deleteEmployee = async (req, res) => {
   try {
-    const employee = await Employee.findByIdAndDelete(req.params.id);
+    const employee = await Employee.findByIdAndDelete(req.params.employeeID);
     if (!employee) {
-      return res.status(404).json({ msg: 'Employee not found.' });
+      return res.status(404).json({ msg: "Employee not found." });
     }
-    res.status(200).json({ msg: 'Employee deleted.' });
+    res.status(200).json({ msg: "Employee deleted." });
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ msg: 'Error deleting employee.' });
+    res.status(500).json({ msg: "Error deleting employee." });
   }
 };
 
@@ -84,7 +96,7 @@ exports.updateAvailability = async (req, res) => {
     const employee = await Employee.findById(req.params.id);
 
     if (!employee) {
-      return res.status(404).json({ msg: 'Employee not found.' });
+      return res.status(404).json({ msg: "Employee not found." });
     }
 
     const availability = employee.availability.find(
@@ -101,6 +113,6 @@ exports.updateAvailability = async (req, res) => {
     res.status(200).json(employee);
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ msg: 'Error updating availability.' });
+    res.status(500).json({ msg: "Error updating availability." });
   }
 };

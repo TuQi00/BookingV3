@@ -5,6 +5,8 @@ const UserSchema = new mongoose.Schema({
   name: { type: String },
   email: { type: String, required: true, unique: true, match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
   password: { type: String },
+  bookings: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Booking' }], // Thêm mảng tham chiếu tới các lịch hẹn
+
 });
 
 UserSchema.pre('save', async function (next) {

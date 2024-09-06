@@ -78,8 +78,14 @@ exports.createBooking = async (req, res) => {
       time,
     });
 
-    await booking.save();
-    res.status(201).json(booking);
+    const savedBooking = await booking.save();
+    let users = await User.findById(user._id);
+    if (!users) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+    users.bookings.push(savedBooking._id);
+    await users.save();
+    res.status(201).json(savedBooking);
   } catch (err) {
     console.error('Error creating booking:', err);
     res.status(500).json({ msg: 'Error creating booking.' });
