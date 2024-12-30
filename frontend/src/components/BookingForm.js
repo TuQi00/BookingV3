@@ -50,20 +50,7 @@ const BookingForm = () => {
     }
   }, [employee]);
 
-  const handleEmailSubmit = (event) => {
-    event.preventDefault();
-    setError("");
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError("Invalid email format");
-      return;
-    }
-
-    setStep(2);
-  };
-
-  const handleNextStep = (event) => {
+  const handleServiceSubmit = (event) => {
     event.preventDefault();
     setError("");
 
@@ -72,14 +59,21 @@ const BookingForm = () => {
       return;
     }
 
+    setStep(2);
+  };
+
+  const handleConfirmSubmit = (event) => {
+    event.preventDefault();
+    setError("");
     setStep(3);
   };
 
-  const handleFinalSubmit = async () => {
+  const handleEmailSubmit = async () => {
     setError("");
 
-    if (!service || !subservice || !employee || !date || !time) {
-      setError("All fields are required.");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Invalid email format");
       return;
     }
 
@@ -127,32 +121,18 @@ const BookingForm = () => {
       </header>
       <div className="step-indicator">
         <div className={`step ${step === 1 ? "active" : ""}`}>
-          Step 1: Email
+          Step 1: Service
         </div>
         <div className={`step ${step === 2 ? "active" : ""}`}>
-          Step 2: Details
+          Step 2: Confirm
         </div>
         <div className={`step ${step === 3 ? "active" : ""}`}>
-          Step 3: Confirm
+          Step 3: Email
         </div>
       </div>
       {error && <p className="error-message">{error}</p>}
       {step === 1 && (
-        <form onSubmit={handleEmailSubmit}>
-          <label>Email:</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <button type="submit" disabled={loading}>
-            {loading ? "Validating..." : "Next"}
-          </button>
-        </form>
-      )}
-      {step === 2 && (
-        <form onSubmit={handleNextStep}>
+        <form onSubmit={handleServiceSubmit}>
           <ServiceSelect value={service} onChange={setService} />
           <SubserviceSelect
             value={subservice}
@@ -181,8 +161,8 @@ const BookingForm = () => {
           <button type="submit">Next</button>
         </form>
       )}
-      {step === 3 && (
-        <div>
+      {step === 2 && (
+        <form onSubmit={handleConfirmSubmit}>
           <h2>Confirm Booking</h2>
           <p>
             <strong>Service:</strong> {serviceName}
@@ -199,7 +179,19 @@ const BookingForm = () => {
           <p>
             <strong>Time:</strong> {time}
           </p>
-          <button onClick={handleFinalSubmit} disabled={loading}>
+          <button type="submit">Next</button>
+        </form>
+      )}
+      {step === 3 && (
+        <div>
+          <label>Email:</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <button onClick={handleEmailSubmit} disabled={loading}>
             {loading ? "Submitting..." : "Submit Booking"}
           </button>
         </div>
