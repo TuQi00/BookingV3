@@ -1,16 +1,17 @@
 const express = require("express");
 const {
   createBooking,
-  getAllBookings,
-  getAvailableEmployees,
-  updateBooking,
+  getSessionData,
 } = require("../controllers/bookingController");
-const { checkAndCreateUser } = require("../middleware/checkAndCreateUser");
+const {
+  checkInvalidEmail,
+  checkAndCreateUser,
+} = require("../middleware/checkEveryThing");
+
 const router = express.Router();
 
-router.post("/", checkAndCreateUser, createBooking);
-router.post("/:id", updateBooking);
-router.get("/all-bookings", getAllBookings);
-router.post("/available-employees", getAvailableEmployees);
+// Đảm bảo sử dụng `checkInvalidEmail("body")` và `checkAndCreateUser` đúng cách
+router.post("/", checkInvalidEmail("body"), checkAndCreateUser, createBooking);
+// router.get("/session", getSessionData);
 
 module.exports = router;

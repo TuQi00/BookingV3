@@ -1,20 +1,32 @@
-const express = require('express');
+const express = require("express");
+const asyncHandler = require("../middleware/asyncHandler");
+const serviceController = require("../controllers/serviceController");
+const subserviceController = require("../controllers/subserviceController");
+
 const router = express.Router();
-const serviceController = require('../controllers/serviceController');
-const subserviceController = require('../controllers/subserviceController');
 
-router.post('/', serviceController.createService);
-router.get('/', serviceController.getAllServices);
-router.get('/:serviceId', serviceController.detailService);
-router.put('/:serviceId', serviceController.updateService);
-router.delete('/:serviceId', serviceController.deleteService);
+router.post("/", asyncHandler(serviceController.createService));
+router.get("/", asyncHandler(serviceController.getAllServices));
+router.get("/:service", asyncHandler(serviceController.detailService));
+router.put("/:serviceId", asyncHandler(serviceController.updateService));
+router.delete("/:serviceId", asyncHandler(serviceController.deleteService));
 
-
-
-// CRUD Subservices
-router.post('/:serviceId/subservices', subserviceController.addSubservice);
-router.put('/:serviceId/subservices/:subserviceId', subserviceController.updateSubservice);
-router.delete('/:serviceId/subservices/:subserviceId', subserviceController.deleteSubservice);
-router.get('/:serviceId/subservices', subserviceController.getSubservicesByServiceId);
+// Subservices
+router.post(
+  "/:serviceId/subservices",
+  asyncHandler(subserviceController.addSubservice)
+);
+router.get(
+  "/:serviceId/subservices",
+  asyncHandler(subserviceController.getSubservicesByServiceId)
+);
+router.put(
+  "/:serviceId/subservices/:subserviceId",
+  asyncHandler(subserviceController.updateSubservice)
+);
+router.delete(
+  "/:serviceId/subservices/:subserviceId",
+  asyncHandler(subserviceController.deleteSubservice)
+);
 
 module.exports = router;

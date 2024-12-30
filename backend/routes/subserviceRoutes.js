@@ -1,9 +1,19 @@
-const express = require('express');
-const asyncHandler = require('../middleware/asyncHandler');
-const { detailSubservice } = require('../controllers/subserviceController');
+const express = require("express");
 const router = express.Router();
+const {
+  addSubservice,
+  getSubservicesByServiceId,
+  updateSubservice,
+  deleteSubservice,
+  getDetailSubserviceById,
+} = require("../controllers/subserviceController");
 
-router.get('/:subserviceId', detailSubservice);
+// Định tuyến API
+router.get("/:serviceId/subservices/:subserviceId", getDetailSubserviceById);
 
+router.post("/:serviceId/subservices", addSubservice);
+router.get("/:serviceId/subservices", getSubservicesByServiceId);
+router.put("/:serviceId/subservices/:subserviceId", updateSubservice);
+router.delete("/:serviceId/subservices/:subserviceId", deleteSubservice);
 
 module.exports = router;

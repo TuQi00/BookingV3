@@ -1,8 +1,12 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const User = require('../middleware/checkAndCreateUser');
+const {
+  checkAndCreateUser,
+  getUserByEmail,
+} = require("../middleware/checkEveryThing");
+console.log(checkAndCreateUser);
 
-router.post('/', User.checkAndCreateUser);
-router.get('/:email', User.getUserByEmail);
+router.post("/", checkAndCreateUser);
+router.get("/:email", getUserByEmail);
 
 module.exports = router;
