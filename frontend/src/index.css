@@ -11,13 +11,13 @@
   --border-radius: 8px;
   --input-padding: 12px;
   --input-font-size: 1rem;
-  --button-padding: 12px;
+  --button-padding: 12px 26px;
   --button-font-size: 1rem;
   --font-family: Arial, sans-serif;
   --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Global Reset and Global Styles */
+/* Global Reset and Styles */
 *,
 *::before,
 *::after {
@@ -26,31 +26,45 @@
   box-sizing: border-box;
 }
 
+
+
 body {
   font-family: var(--font-family);
   background-color: var(--background-color);
   color: #333;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh; /* Full viewport height */
+  display: flex; /* Use Flexbox for centering */
+  justify-content: center; /* Center horizontally */
+  min-height: 100vh; /* Full viewport height */
   margin: 0;
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
+
+.button-group {
+  display: flex;
+  justify-content: space-around; /* Đảm bảo các nút được căn cách đều */
+  gap: 15px; /* Thêm khoảng cách giữa các nút */
+  margin-top: 20px; /* Thêm khoảng cách phía trên */
+}
+
 
 /* Main Booking Form Container */
 .booking-form-container {
-  max-width: 600px;
+  max-width: 700px;
   width: 100%;
   background-color: var(--card-background);
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
-  padding: 30px;
+  padding: 40px;
   margin: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center contents horizontally */
+  text-align: center; /* Center text inside the form */
+  border: 1px solid var(--card-border-color);
 }
 
 /* Header */
 header h2 {
-  text-align: center;
   font-size: 26px;
   color: #333;
   margin-bottom: 30px;
@@ -60,6 +74,7 @@ header h2 {
 .step-indicator {
   display: flex;
   justify-content: space-between;
+  width: 100%;
   margin-bottom: 30px;
 }
 
@@ -70,6 +85,8 @@ header h2 {
   background-color: #f0f0f0;
   border-radius: 5px;
   font-size: var(--input-font-size);
+  margin: 0 5px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .step.active {
@@ -82,13 +99,19 @@ header h2 {
 form {
   display: flex;
   flex-direction: column;
+  align-items: stretch; /* Đảm bảo tất cả phần tử con có chiều rộng đồng đều */
   gap: 20px;
+  width: 100%;
+  text-align: left; /* Đảm bảo các nhãn và nội dung cũng căn trái */
 }
+
 
 label {
   font-weight: bold;
   margin-bottom: 5px;
   font-size: var(--input-font-size);
+  text-align: left;
+  width: 100%;
 }
 
 input,
@@ -97,6 +120,7 @@ select {
   font-size: var(--input-font-size);
   border: 1px solid var(--card-border-color);
   border-radius: var(--border-radius);
+  width: 100%;
 }
 
 button {
@@ -133,10 +157,10 @@ button:disabled {
   border: 1px solid #d3e4f1;
   box-shadow: var(--box-shadow);
   margin-top: 30px;
+  width: 100%;
 }
 
 .step-3-container h2 {
-  text-align: center;
   font-size: 22px;
   color: #333;
   margin-bottom: 15px;
@@ -186,6 +210,7 @@ button:disabled {
   .step {
     width: 100%;
     padding: 12px;
+    margin: 5px 0;
   }
 
   .step-3-buttons {
@@ -193,3 +218,4 @@ button:disabled {
     gap: 20px;
   }
 }
+

@@ -16,17 +16,14 @@ const checkInvalidEmail = (key = "body") => {
 // Check and create user
 const checkAndCreateUser = async (req, res, next) => {
   const { email } = req.body;
-  console.log("Email submitted: 19 CheckAndCreateUser", email);
 
   if (!email) {
-    console.log("Missing email in request body");
     return res.status(400).json({ message: "Email is required" });
   }
 
   try {
     let user = await User.findOne({ email });
     if (!user) {
-      console.log("Creating new user...");
       user = await User.create({ email });
     } else {
       console.log("User found:", user);

@@ -1,15 +1,15 @@
-import React from "react";
-import "./index.css"; // Import CSS file
-import BookingForm from "./components/BookingForm";
+import React, { Suspense, lazy } from "react";
+import "./index.css";
+
+const BookingForm = lazy(() => import("./components/BookingForm"));
 
 const App = () => {
   return (
     <div className="App">
-      <header className="App-header"></header>
-      <main>
+      <h1>Booking System</h1>
+      <Suspense fallback={<div>Loading...</div>}>
         <BookingForm />
-      </main>
-      <footer></footer>
+      </Suspense>
     </div>
   );
 };

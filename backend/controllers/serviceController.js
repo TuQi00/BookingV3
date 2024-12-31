@@ -8,7 +8,7 @@ exports.createService = asyncHandler(async (req, res) => {
 });
 
 exports.getAllServices = asyncHandler(async (req, res) => {
-  const services = await Service.find();
+  const services = await Service.find().lean();
   res.json({ success: true, services });
 });
 

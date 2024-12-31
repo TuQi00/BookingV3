@@ -1,4 +1,3 @@
-// BookingForm.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../index.css";
@@ -7,7 +6,7 @@ import SubserviceSelect from "./SubserviceSelect";
 import EmployeeSelect from "./EmployeeSelect";
 
 const BookingForm = () => {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(1); // Bước hiện tại
   const [email, setEmail] = useState("");
   const [service, setService] = useState("");
   const [subservice, setSubservice] = useState("");
@@ -16,61 +15,57 @@ const BookingForm = () => {
   const [time, setTime] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [bookingDetails, setBookingDetails] = useState(null);
   const [serviceName, setServiceName] = useState("");
   const [subserviceName, setSubserviceName] = useState("");
   const [employeeName, setEmployeeName] = useState("");
 
-  useEffect(() => {
-    if (service) {
-      axios
-        .get(`http://localhost:5000/api/services/${service}`)
-        .then((res) => setServiceName(res.data.data.name))
-        .catch((err) => console.error("Error fetching service name:", err));
+  // Fetch service, subservice, employee details
+  const fetchDetails = async (type, id) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `http://localhost:5000/api/${type}/${id}`
+      );
+      if (response.data.success) {
+        if (type === "services") setServiceName(response.data.data.name);
+        if (type === "subservices") setSubserviceName(response.data.data.name);
+        if (type === "employees") setEmployeeName(response.data.data.name);
+      } else {
+        throw new Error("Failed to fetch details");
+      }
+    } catch (err) {
+      console.error(`Error fetching ${type} name:`, err);
+      setError("Failed to load data");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (service) fetchDetails("services", service);
   }, [service]);
 
   useEffect(() => {
-    if (service && subservice) {
-      axios
-        .get(
-          `http://localhost:5000/api/subservices/${service}/subservices/${subservice}`
-        )
-        .then((res) => setSubserviceName(res.data.data.name))
-        .catch((err) => console.error("Error fetching subservice name:", err));
-    }
+    if (service && subservice)
+      fetchDetails("subservices", `${service}/subservices/${subservice}`);
   }, [service, subservice]);
 
   useEffect(() => {
-    if (employee) {
-      axios
-        .get(`http://localhost:5000/api/employees/${employee}`)
-        .then((res) => setEmployeeName(res.data.data.name))
-        .catch((err) => console.error("Error fetching employee name:", err));
-    }
+    if (employee) fetchDetails("employees", employee);
   }, [employee]);
 
   const handleServiceSubmit = (event) => {
     event.preventDefault();
-    setError("");
-
     if (!service || !subservice || !employee || !date || !time) {
       setError("All fields are required");
       return;
     }
-
-    setStep(2);
-  };
-
-  const handleConfirmSubmit = (event) => {
-    event.preventDefault();
     setError("");
-    setStep(3);
+    setStep(2); // Chuyển sang bước xác nhận
   };
 
   const handleEmailSubmit = async () => {
     setError("");
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("Invalid email format");
@@ -79,25 +74,20 @@ const BookingForm = () => {
 
     try {
       setLoading(true);
-
       const bookingData = { email, service, subservice, employee, date, time };
       const response = await axios.post(
         "http://localhost:5000/api/bookings",
         bookingData
       );
-
       if (response.data.success) {
-        setBookingDetails(response.data.booking);
-        setStep(4);
+        setStep(4); // Chuyển sang bước xác nhận email
       } else {
         setError(response.data.msg || "Unexpected error occurred.");
       }
     } catch (err) {
-      if (err.response && err.response.data.msg) {
-        setError(err.response.data.msg);
-      } else {
-        setError("Error submitting booking. Please try again.");
-      }
+      setError(
+        err.response?.data?.msg || "Error submitting booking. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -110,7 +100,7 @@ const BookingForm = () => {
     setEmployee("");
     setDate("");
     setTime("");
-    setStep(1);
+    setStep(1); // Quay lại bước đầu tiên
     setError("");
   };
 
@@ -131,6 +121,8 @@ const BookingForm = () => {
         </div>
       </div>
       {error && <p className="error-message">{error}</p>}
+
+      {/* Step 1: Service Selection */}
       {step === 1 && (
         <form onSubmit={handleServiceSubmit}>
           <ServiceSelect value={service} onChange={setService} />
@@ -158,11 +150,17 @@ const BookingForm = () => {
             onChange={(e) => setTime(e.target.value)}
             required
           />
-          <button type="submit">Next</button>
+          <div className="button-group">
+            <button type="submit" disabled={loading}>
+              Next
+            </button>
+          </div>
         </form>
       )}
+
+      {/* Step 2: Confirm Selection */}
       {step === 2 && (
-        <form onSubmit={handleConfirmSubmit}>
+        <form>
           <h2>Confirm Booking</h2>
           <p>
             <strong>Service:</strong> {serviceName}
@@ -179,11 +177,20 @@ const BookingForm = () => {
           <p>
             <strong>Time:</strong> {time}
           </p>
-          <button type="submit">Next</button>
+          <div className="button-group">
+            <button type="button" onClick={() => setStep(1)}>
+              Back
+            </button>
+            <button type="button" onClick={() => setStep(3)}>
+              Next
+            </button>
+          </div>
         </form>
       )}
+
+      {/* Step 3: Email Input */}
       {step === 3 && (
-        <div>
+        <form>
           <label>Email:</label>
           <input
             type="email"
@@ -191,28 +198,35 @@ const BookingForm = () => {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <button onClick={handleEmailSubmit} disabled={loading}>
-            {loading ? "Submitting..." : "Submit Booking"}
-          </button>
-        </div>
+          <div className="button-group">
+            <button type="button" onClick={() => setStep(2)}>
+              Back
+            </button>
+            <button onClick={handleEmailSubmit} disabled={loading}>
+              {loading ? "Submitting..." : "Submit Booking"}
+            </button>
+          </div>
+        </form>
       )}
-      {step === 4 && bookingDetails && (
+
+      {/* Step 4: Confirmation */}
+      {step === 4 && (
         <div>
-          <h2>Booking Confirmed!</h2>
+          <h2>Booking Successfully!</h2>
           <p>
-            <strong>Service:</strong> {bookingDetails.service}
+            <strong>Service:</strong> {serviceName}
           </p>
           <p>
-            <strong>Subservice:</strong> {bookingDetails.subservice}
+            <strong>Subservice:</strong> {subserviceName}
           </p>
           <p>
-            <strong>Employee:</strong> {bookingDetails.employee}
+            <strong>Employee:</strong> {employeeName}
           </p>
           <p>
-            <strong>Date:</strong> {bookingDetails.date}
+            <strong>Date:</strong> {date}
           </p>
           <p>
-            <strong>Time:</strong> {bookingDetails.time}
+            <strong>Time:</strong> {time}
           </p>
           <button onClick={resetForm}>Start Over</button>
         </div>
