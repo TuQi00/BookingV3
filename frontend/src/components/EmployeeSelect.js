@@ -1,42 +1,57 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const EmployeeSelect = ({ value, onChange, subserviceId }) => {
-  const [employees, setEmployees] = useState([]);
+const EmployeeSelect = ({ value, onChange }) => {
+  const [employees, setEmployees] = useState([]); // Đảm bảo employees là mảng mặc định
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    setLoading(true);
-    axios
-      .get("http://localhost:5000/api/employees")
-      .then((res) => {
-        if (res.data.success && Array.isArray(res.data.employees)) {
-          setEmployees(res.data.employees);
+    const fetchEmployees = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get("http://localhost:5000/api/employees");
+        if (response.data.success) {
+          setEmployees(response.data.employees || []); // Sửa thành employees thay vì data
         } else {
-          console.error("Invalid API response:", res.data);
-          setEmployees([]);
+          setError("Failed to fetch employees");
         }
-      })
-      .catch((err) => console.error("Error fetching services:", err))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        setError("Error loading employees");
+        console.error("Error:", err); // Log lỗi nếu có
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEmployees();
   }, []);
 
   return (
-    <div>
-      <label>Select Employee:</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={!subserviceId || loading}
-      >
-        <option value="">Select an employee</option>
-        {employees.map((employee) => (
-          <option key={employee._id} value={employee._id}>
-            {employee.name}
-          </option>
-        ))}
-      </select>
+    <div className="employee-select">
+      <h3>Select Employee</h3>
       {loading && <p>Loading employees...</p>}
+      {error && <p className="error-message">{error}</p>}
+      <div className="employee-container">
+        {employees.length > 0
+          ? employees.map((employee) => (
+              <div
+                key={employee._id}
+                className={`employee-card ${
+                  value === employee._id ? "selected" : ""
+                }`}
+                onClick={() => onChange(employee._id)}
+              >
+                <img
+                  src={employee.image || "default-image.jpg"}
+                  alt={employee.name}
+                  className="employee-image"
+                />
+                <p className="employee-name">{employee.name}</p>
+              </div>
+            ))
+          : !loading && <p>No employees available.</p>}
+      </div>
     </div>
   );
 };

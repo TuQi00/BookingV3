@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from "react";
-import "./index.css";
+import "./styles.css";
 
 const BookingForm = lazy(() => import("./components/BookingForm"));
 

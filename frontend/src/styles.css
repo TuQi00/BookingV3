@@ -26,6 +26,101 @@
   box-sizing: border-box;
 }
 
+.employee-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.employee-card {
+  cursor: pointer;
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+  width: 120px;
+  border-radius: 8px;
+  transition: transform 0.2s;
+}
+
+.employee-card.selected {
+  border-color: #007bff;
+  transform: scale(1.05);
+}
+
+.employee-card img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+
+.employee-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.error-message {
+  color: red;
+  font-size: 14px;
+}
+
+.loading-spinner {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Subservice container styling */
+.subservice-container {
+  border: 1px solid #ddd;
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+.subservice-container:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.subservice-container h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.subservice-container p {
+  font-size: 1rem;
+  color: #555;
+  margin: 5px 0;
+}
+
+.subservice-container .price {
+  font-size: 1.2rem;
+  color: #28a745;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.subservice-container .description {
+  font-style: italic;
+  color: #777;
+  margin-top: 5px;
+}
+
+/* Optional: Add a separator line between the subservice name and the description */
+.subservice-container hr {
+  margin: 10px 0;
+  border: 0;
+  border-top: 1px solid #ddd;
+}
+
+.subservice-container .subservice-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
 
 body {

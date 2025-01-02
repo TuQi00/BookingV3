@@ -1,40 +1,50 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "../index.css";
+import "../styles.css";
+import CategorySelect from "./CategorySelect";
 import ServiceSelect from "./ServiceSelect";
-import SubserviceSelect from "./SubserviceSelect";
 import EmployeeSelect from "./EmployeeSelect";
 
 const BookingForm = () => {
-  const [step, setStep] = useState(1); // Bước hiện tại
+  const [step, setStep] = useState(1); // Current step
   const [email, setEmail] = useState("");
-  const [service, setService] = useState("");
-  const [subservice, setSubservice] = useState("");
+  const [category, setCategory] = useState(""); // Renamed from service to category
+  const [service, setService] = useState(""); // Renamed from subservice to service
   const [employee, setEmployee] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [serviceName, setServiceName] = useState("");
-  const [subserviceName, setSubserviceName] = useState("");
+  const [categoryName, setCategoryName] = useState(""); // Renamed from serviceName
+  const [serviceDetails, setServiceDetails] = useState({}); // Renamed from subserviceDetails
   const [employeeName, setEmployeeName] = useState("");
+  const [employeeImage, setEmployeeImage] = useState(""); // To store employee's image
 
-  // Fetch service, subservice, employee details
-  const fetchDetails = async (type, id) => {
+  // Fetch category, service, employee details
+  const fetchDetails = async (type, id, categoryId) => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `http://localhost:5000/api/${type}/${id}`
-      );
+      let url = `http://localhost:5000/api/${type}/${id}`;
+
+      if (type === "services" && categoryId) {
+        url = `http://localhost:5000/api/services/${categoryId}/services/${id}`; // Use categoryId and serviceId
+      }
+
+      const response = await axios.get(url);
       if (response.data.success) {
-        if (type === "services") setServiceName(response.data.data.name);
-        if (type === "subservices") setSubserviceName(response.data.data.name);
-        if (type === "employees") setEmployeeName(response.data.data.name);
+        if (type === "categories") setCategoryName(response.data.data.name); // For category
+        if (type === "services") {
+          setServiceDetails(response.data.data); // For service
+        }
+        if (type === "employees") {
+          setEmployeeName(response.data.data.name);
+          setEmployeeImage(response.data.data.image); // Assuming the employee data includes an 'image' field
+        }
       } else {
         throw new Error("Failed to fetch details");
       }
     } catch (err) {
-      console.error(`Error fetching ${type} name:`, err);
+      console.error(`Error fetching ${type} details:`, err);
       setError("Failed to load data");
     } finally {
       setLoading(false);
@@ -42,13 +52,12 @@ const BookingForm = () => {
   };
 
   useEffect(() => {
-    if (service) fetchDetails("services", service);
-  }, [service]);
+    if (category) fetchDetails("categories", category); // Fetch category details
+  }, [category]);
 
   useEffect(() => {
-    if (service && subservice)
-      fetchDetails("subservices", `${service}/subservices/${subservice}`);
-  }, [service, subservice]);
+    if (category && service) fetchDetails("services", service, category); // Fetch service details with categoryId
+  }, [category, service]);
 
   useEffect(() => {
     if (employee) fetchDetails("employees", employee);
@@ -56,12 +65,12 @@ const BookingForm = () => {
 
   const handleServiceSubmit = (event) => {
     event.preventDefault();
-    if (!service || !subservice || !employee || !date || !time) {
+    if (!category || !service || !employee || !date || !time) {
       setError("All fields are required");
       return;
     }
     setError("");
-    setStep(2); // Chuyển sang bước xác nhận
+    setStep(2); // Move to step 2: Confirm
   };
 
   const handleEmailSubmit = async () => {
@@ -74,13 +83,13 @@ const BookingForm = () => {
 
     try {
       setLoading(true);
-      const bookingData = { email, service, subservice, employee, date, time };
+      const bookingData = { email, category, service, employee, date, time };
       const response = await axios.post(
         "http://localhost:5000/api/bookings",
         bookingData
       );
       if (response.data.success) {
-        setStep(4); // Chuyển sang bước xác nhận email
+        setStep(4); // Go to step 4: Booking successful
       } else {
         setError(response.data.msg || "Unexpected error occurred.");
       }
@@ -95,12 +104,12 @@ const BookingForm = () => {
 
   const resetForm = () => {
     setEmail("");
+    setCategory("");
     setService("");
-    setSubservice("");
     setEmployee("");
     setDate("");
     setTime("");
-    setStep(1); // Quay lại bước đầu tiên
+    setStep(1); // Go back to step 1
     setError("");
   };
 
@@ -122,19 +131,30 @@ const BookingForm = () => {
       </div>
       {error && <p className="error-message">{error}</p>}
 
-      {/* Step 1: Service Selection */}
+      {/* Step 1: Category & Service Selection */}
       {step === 1 && (
         <form onSubmit={handleServiceSubmit}>
-          <ServiceSelect value={service} onChange={setService} />
-          <SubserviceSelect
-            value={subservice}
-            onChange={setSubservice}
-            serviceId={service}
+          <CategorySelect value={category} onChange={setCategory} />
+          <ServiceSelect
+            value={service}
+            onChange={setService}
+            categoryId={category} // Pass categoryId to fetch services
           />
+          {service && serviceDetails && (
+            <div className="service-container">
+              <h3>{serviceDetails.name}</h3>
+              <p>
+                <strong>Price:</strong> ${serviceDetails.price}
+              </p>
+              <p>
+                <strong>Description:</strong> {serviceDetails.description}
+              </p>
+            </div>
+          )}
           <EmployeeSelect
             value={employee}
             onChange={setEmployee}
-            subserviceId={subservice}
+            serviceId={service} // Pass serviceId to fetch employees
           />
           <label>Date:</label>
           <input
@@ -163,10 +183,16 @@ const BookingForm = () => {
         <form>
           <h2>Confirm Booking</h2>
           <p>
-            <strong>Service:</strong> {serviceName}
+            <strong>Category:</strong> {categoryName}
           </p>
           <p>
-            <strong>Subservice:</strong> {subserviceName}
+            <strong>Service:</strong> {serviceDetails.name}
+          </p>
+          <p>
+            <strong>Price:</strong> ${serviceDetails.price}
+          </p>
+          <p>
+            <strong>Description:</strong> {serviceDetails.description}
           </p>
           <p>
             <strong>Employee:</strong> {employeeName}
@@ -191,7 +217,7 @@ const BookingForm = () => {
       {/* Step 3: Email Input */}
       {step === 3 && (
         <form>
-          <label>Email:</label>
+          <label>Infomation:</label>
           <input
             type="email"
             value={email}
@@ -214,10 +240,16 @@ const BookingForm = () => {
         <div>
           <h2>Booking Successfully!</h2>
           <p>
-            <strong>Service:</strong> {serviceName}
+            <strong>Category:</strong> {categoryName}
           </p>
           <p>
-            <strong>Subservice:</strong> {subserviceName}
+            <strong>Service:</strong> {serviceDetails.name}
+          </p>
+          <p>
+            <strong>Price:</strong> ${serviceDetails.price}
+          </p>
+          <p>
+            <strong>Description:</strong> {serviceDetails.description}
           </p>
           <p>
             <strong>Employee:</strong> {employeeName}
