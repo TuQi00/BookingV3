@@ -1,10 +1,10 @@
 const Employee = require("../models/Employee");
 const asyncHandler = require("../middleware/asyncHandler");
-const Subservice = require("../models/Subservice");
+const Subservice = require("../models/Service");
 
 exports.createEmployee = asyncHandler(async (req, res) => {
-  const { name, availability } = req.body;
-  const employee = await Employee.create({ name, availability });
+  const { name, availability, image } = req.body;
+  const employee = await Employee.create({ name, availability, image });
   res.status(201).json({ success: true, employee });
 });
 

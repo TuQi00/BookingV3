@@ -1,32 +1,18 @@
 const express = require("express");
-const asyncHandler = require("../middleware/asyncHandler");
-const serviceController = require("../controllers/serviceController");
-const subserviceController = require("../controllers/subserviceController");
-
 const router = express.Router();
+const {
+  addService,
+  getServiceById,
+  getServicesByCategoryId,
+  updateService,
+  deleteService,
+} = require("../controllers/serviceController");
 
-router.post("/", asyncHandler(serviceController.createService));
-router.get("/", asyncHandler(serviceController.getAllServices));
-router.get("/:service", asyncHandler(serviceController.detailService));
-router.put("/:serviceId", asyncHandler(serviceController.updateService));
-router.delete("/:serviceId", asyncHandler(serviceController.deleteService));
-
-// Subservices
-router.post(
-  "/:serviceId/subservices",
-  asyncHandler(subserviceController.addSubservice)
-);
-router.get(
-  "/:serviceId/subservices",
-  asyncHandler(subserviceController.getSubservicesByServiceId)
-);
-router.put(
-  "/:serviceId/subservices/:subserviceId",
-  asyncHandler(subserviceController.updateSubservice)
-);
-router.delete(
-  "/:serviceId/subservices/:subserviceId",
-  asyncHandler(subserviceController.deleteSubservice)
-);
+// Define routes
+router.post("/:categoryId/services", addService);
+router.get("/:categoryId/services", getServicesByCategoryId);
+router.get("/:categoryId/services/:serviceId", getServiceById);
+router.put("/:categoryId/services/:serviceId", updateService);
+router.delete("/:categoryId/services/:serviceId", deleteService);
 
 module.exports = router;

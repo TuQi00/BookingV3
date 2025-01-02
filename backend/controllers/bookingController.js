@@ -1,16 +1,16 @@
 const Booking = require("../models/Booking");
 const Employee = require("../models/Employee");
-const Subservice = require("../models/Subservice");
-const Service = require("../models/Service");
+const Service = require("../models/Service"); // Change to 'Service' instead of 'Subservice'
+const Category = require("../models/Category"); // Change to 'Category' instead of 'Service'
 const User = require("../models/User");
 const asyncHandler = require("../middleware/asyncHandler");
 
 // Create a new booking
 exports.createBooking = asyncHandler(async (req, res) => {
-  const { service, subservice, employee, date, time, email } = req.body;
-
+  const { category, service, employee, date, time, email } = req.body; // Change 'service' and 'subservice' as per the new structure
+  console.log(req.body);
   // Validate input
-  if (!service || !subservice || !employee || !date || !time || !email) {
+  if (!category || !service || !employee || !date || !time || !email) {
     return res.status(400).json({ msg: "All fields are required." });
   }
 
@@ -19,12 +19,12 @@ exports.createBooking = asyncHandler(async (req, res) => {
   if (!user) {
     return res
       .status(400)
-      .json({ msg: "User  not found. Please register first." });
+      .json({ msg: "User not found. Please register first." });
   }
 
   // Fetch related documents
-  const serviceDoc = await Service.findById(service);
-  const subserviceDoc = await Subservice.findById(subservice);
+  const categoryDoc = await Category.findById(category); // Change to 'Category'
+  const serviceDoc = await Service.findById(service); // Change to 'Service'
   const employeeDoc = await Employee.findById(employee);
 
   // Check for existing bookings
@@ -38,8 +38,8 @@ exports.createBooking = asyncHandler(async (req, res) => {
   // Create a new booking
   const booking = new Booking({
     user: user._id,
-    service: serviceDoc._id,
-    subservice: subserviceDoc._id,
+    category: categoryDoc._id, // Changed to 'category' instead of 'service'
+    service: serviceDoc._id, // Changed to 'service' instead of 'subservice'
     employee: employeeDoc._id,
     date,
     time,
@@ -56,9 +56,9 @@ exports.createBooking = asyncHandler(async (req, res) => {
     success: true,
     booking: {
       id: savedBooking._id,
-      service: serviceDoc.name, // Lấy tên dịch vụ
-      subservice: subserviceDoc.name, // Lấy tên subservice
-      employee: employeeDoc.name, // Lấy tên nhân viên
+      category: categoryDoc.name, // Return the category name
+      service: serviceDoc.name, // Return the service name
+      employee: employeeDoc.name, // Return the employee name
       date,
       time,
     },

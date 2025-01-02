@@ -8,6 +8,7 @@ const EmployeeSchema = new mongoose.Schema({
       available: { type: Boolean, default: true },
     },
   ],
+  image: { type: String }, // Thêm trường image
 });
 
 module.exports = mongoose.model("Employee", EmployeeSchema);
