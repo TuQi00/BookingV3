@@ -8,17 +8,16 @@ import EmployeeSelect from "./EmployeeSelect";
 const BookingForm = () => {
   const [step, setStep] = useState(1); // Current step
   const [email, setEmail] = useState("");
-  const [category, setCategory] = useState(""); // Renamed from service to category
-  const [service, setService] = useState(""); // Renamed from subservice to service
+  const [category, setCategory] = useState("");
+  const [service, setService] = useState("");
   const [employee, setEmployee] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [categoryName, setCategoryName] = useState(""); // Renamed from serviceName
-  const [serviceDetails, setServiceDetails] = useState({}); // Renamed from subserviceDetails
-  const [employeeName, setEmployeeName] = useState("");
-  const [employeeImage, setEmployeeImage] = useState(""); // To store employee's image
+  const [categoryDetails, setCategoryDetails] = useState(null);
+  const [serviceDetails, setServiceDetails] = useState(null);
+  const [employeeDetails, setEmployeeDetails] = useState(null);
 
   // Fetch category, service, employee details
   const fetchDetails = async (type, id, categoryId) => {
@@ -27,60 +26,61 @@ const BookingForm = () => {
       let url = `http://localhost:5000/api/${type}/${id}`;
 
       if (type === "services" && categoryId) {
-        url = `http://localhost:5000/api/services/${categoryId}/services/${id}`; // Use categoryId and serviceId
+        url = `http://localhost:5000/api/services/${categoryId}/services/${id}`;
       }
 
       const response = await axios.get(url);
+
       if (response.data.success) {
-        if (type === "categories") setCategoryName(response.data.data.name); // For category
-        if (type === "services") {
-          setServiceDetails(response.data.data); // For service
-        }
-        if (type === "employees") {
-          setEmployeeName(response.data.data.name);
-          setEmployeeImage(response.data.data.image); // Assuming the employee data includes an 'image' field
-        }
+        if (type === "categories") setCategoryDetails(response.data.data);
+        if (type === "services") setServiceDetails(response.data.data);
+        if (type === "employees") setEmployeeDetails(response.data.data);
       } else {
         throw new Error("Failed to fetch details");
       }
     } catch (err) {
       console.error(`Error fetching ${type} details:`, err);
-      setError("Failed to load data");
+      setError(err.response?.data?.msg || "Failed to load data");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (category) fetchDetails("categories", category); // Fetch category details
+    if (category) fetchDetails("categories", category);
   }, [category]);
 
   useEffect(() => {
-    if (category && service) fetchDetails("services", service, category); // Fetch service details with categoryId
+    if (category && service) fetchDetails("services", service, category);
   }, [category, service]);
 
   useEffect(() => {
     if (employee) fetchDetails("employees", employee);
   }, [employee]);
 
-  const handleServiceSubmit = (event) => {
-    event.preventDefault();
-    if (!category || !service || !employee || !date || !time) {
-      setError("All fields are required");
+  const handleNext = () => {
+    if (step === 1 && (!category || !service)) {
+      setError("Please select a category and a service.");
+      return;
+    }
+    if (step === 2 && (!date || !time)) {
+      setError("Please select a date and time.");
+      return;
+    }
+    if (step === 3 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Invalid email format.");
       return;
     }
     setError("");
-    setStep(2); // Move to step 2: Confirm
+    setStep(step + 1);
   };
 
-  const handleEmailSubmit = async () => {
+  const handlePrevious = () => {
+    setStep(step - 1);
     setError("");
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError("Invalid email format");
-      return;
-    }
+  };
 
+  const handleSubmit = async () => {
     try {
       setLoading(true);
       const bookingData = { email, category, service, employee, date, time };
@@ -89,7 +89,7 @@ const BookingForm = () => {
         bookingData
       );
       if (response.data.success) {
-        setStep(4); // Go to step 4: Booking successful
+        setStep(5); // Booking Successful
       } else {
         setError(response.data.msg || "Unexpected error occurred.");
       }
@@ -109,8 +109,11 @@ const BookingForm = () => {
     setEmployee("");
     setDate("");
     setTime("");
-    setStep(1); // Go back to step 1
+    setStep(1);
     setError("");
+    setCategoryDetails(null);
+    setServiceDetails(null);
+    setEmployeeDetails(null);
   };
 
   return (
@@ -119,30 +122,29 @@ const BookingForm = () => {
         <h2>Booking Application</h2>
       </header>
       <div className="step-indicator">
-        <div className={`step ${step === 1 ? "active" : ""}`}>
-          Step 1: Service
-        </div>
-        <div className={`step ${step === 2 ? "active" : ""}`}>
-          Step 2: Confirm
-        </div>
-        <div className={`step ${step === 3 ? "active" : ""}`}>
-          Step 3: Email
-        </div>
+        <div className={`${step === 1 ? "active" : ""}`}>Service</div>
+        <div className={`${step === 2 ? "active" : ""}`}>Time</div>
+        <div className={`${step === 3 ? "active" : ""}`}>Information</div>
+        <div className={`${step === 4 ? "active" : ""}`}>Confirm</div>
       </div>
       {error && <p className="error-message">{error}</p>}
 
-      {/* Step 1: Category & Service Selection */}
+      {/* Step 1: Service Selection */}
       {step === 1 && (
-        <form onSubmit={handleServiceSubmit}>
+        <form>
           <CategorySelect value={category} onChange={setCategory} />
           <ServiceSelect
             value={service}
             onChange={setService}
-            categoryId={category} // Pass categoryId to fetch services
+            categoryId={category}
           />
-          {service && serviceDetails && (
-            <div className="service-container">
-              <h3>{serviceDetails.name}</h3>
+
+          {/* Thêm thông tin chi tiết dịch vụ */}
+          {serviceDetails && (
+            <div className="service-details">
+              <p>
+                <strong>Service:</strong> {serviceDetails.name}
+              </p>
               <p>
                 <strong>Price:</strong> ${serviceDetails.price}
               </p>
@@ -154,8 +156,19 @@ const BookingForm = () => {
           <EmployeeSelect
             value={employee}
             onChange={setEmployee}
-            serviceId={service} // Pass serviceId to fetch employees
+            serviceId={service}
           />
+          <div className="button-group">
+            <button type="button" onClick={handleNext}>
+              Next
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Step 2: Time Selection */}
+      {step === 2 && (
+        <form>
           <label>Date:</label>
           <input
             type="date"
@@ -171,53 +184,20 @@ const BookingForm = () => {
             required
           />
           <div className="button-group">
-            <button type="submit" disabled={loading}>
-              Next
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* Step 2: Confirm Selection */}
-      {step === 2 && (
-        <form>
-          <h2>Confirm Booking</h2>
-          <p>
-            <strong>Category:</strong> {categoryName}
-          </p>
-          <p>
-            <strong>Service:</strong> {serviceDetails.name}
-          </p>
-          <p>
-            <strong>Price:</strong> ${serviceDetails.price}
-          </p>
-          <p>
-            <strong>Description:</strong> {serviceDetails.description}
-          </p>
-          <p>
-            <strong>Employee:</strong> {employeeName}
-          </p>
-          <p>
-            <strong>Date:</strong> {date}
-          </p>
-          <p>
-            <strong>Time:</strong> {time}
-          </p>
-          <div className="button-group">
-            <button type="button" onClick={() => setStep(1)}>
+            <button type="button" onClick={handlePrevious}>
               Back
             </button>
-            <button type="button" onClick={() => setStep(3)}>
+            <button type="button" onClick={handleNext}>
               Next
             </button>
           </div>
         </form>
       )}
 
-      {/* Step 3: Email Input */}
+      {/* Step 3: Information */}
       {step === 3 && (
         <form>
-          <label>Infomation:</label>
+          <label>Email:</label>
           <input
             type="email"
             value={email}
@@ -225,11 +205,11 @@ const BookingForm = () => {
             required
           />
           <div className="button-group">
-            <button type="button" onClick={() => setStep(2)}>
+            <button type="button" onClick={handlePrevious}>
               Back
             </button>
-            <button onClick={handleEmailSubmit} disabled={loading}>
-              {loading ? "Submitting..." : "Submit Booking"}
+            <button type="button" onClick={handleNext}>
+              Next
             </button>
           </div>
         </form>
@@ -238,21 +218,21 @@ const BookingForm = () => {
       {/* Step 4: Confirmation */}
       {step === 4 && (
         <div>
-          <h2>Booking Successfully!</h2>
+          <h2>Confirm Booking</h2>
           <p>
-            <strong>Category:</strong> {categoryName}
+            <strong>Category:</strong> {categoryDetails?.name}
           </p>
           <p>
-            <strong>Service:</strong> {serviceDetails.name}
+            <strong>Service:</strong> {serviceDetails?.name}
           </p>
           <p>
-            <strong>Price:</strong> ${serviceDetails.price}
+            <strong>Price:</strong> ${serviceDetails?.price}
           </p>
           <p>
-            <strong>Description:</strong> {serviceDetails.description}
+            <strong>Description:</strong> {serviceDetails?.description}
           </p>
           <p>
-            <strong>Employee:</strong> {employeeName}
+            <strong>Employee:</strong> {employeeDetails?.name}
           </p>
           <p>
             <strong>Date:</strong> {date}
@@ -260,6 +240,21 @@ const BookingForm = () => {
           <p>
             <strong>Time:</strong> {time}
           </p>
+          <div className="button-group">
+            <button type="button" onClick={handlePrevious}>
+              Back
+            </button>
+            <button type="button" onClick={handleSubmit}>
+              Confirm Booking
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 5: Booking Success */}
+      {step === 5 && (
+        <div>
+          <h2>Booking Successful!</h2>
           <button onClick={resetForm}>Start Over</button>
         </div>
       )}

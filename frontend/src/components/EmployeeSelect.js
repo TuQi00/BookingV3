@@ -11,6 +11,7 @@ const EmployeeSelect = ({ value, onChange }) => {
       try {
         setLoading(true);
         const response = await axios.get("http://localhost:5000/api/employees");
+        console.log("API Response:", response); // Log để kiểm tra dữ liệu API
         if (response.data.success) {
           setEmployees(response.data.employees || []); // Sửa thành employees thay vì data
         } else {
