@@ -1,84 +1,100 @@
 const mongoose = require("mongoose");
-const connectDB = require("./db");
+const Category = require("../models/Category");
 const Service = require("../models/Service");
 const Employee = require("../models/Employee");
-const User = require("../models/User");
 
-const seedServices = async () => {
-  const services = [
-    {
-      name: "Manicure",
-      description: "Basic manicure services",
-      price: 20,
-      subservices: [
-        { name: "Classic Manicure", price: 25 },
-        { name: "French Manicure", price: 30 },
-      ],
-    },
-    {
-      name: "Pedicure",
-      description: "Basic pedicure services",
-      price: 30,
-      subservices: [
-        { name: "Classic Pedicure", price: 35 },
-        { name: "French Pedicure", price: 40 },
-      ],
-    },
-  ];
+const seedData = async () => {
+  try {
+    // Connect to MongoDB
+    await mongoose.connect("mongodb://localhost:27017/nailbooking", {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
 
-  await Service.deleteMany();
-  await Service.insertMany(services);
-  console.log("Services seeded");
+    console.log("Connected to MongoDB");
+
+    // Clear existing data
+    await Category.deleteMany();
+    await Service.deleteMany();
+    await Employee.deleteMany();
+    console.log("Existing data cleared");
+
+    // Seed categories
+    const categories = [
+      {
+        name: "Hair Care",
+        description: "Services related to hair styling and treatments.",
+      },
+      {
+        name: "Skin Care",
+        description: "Services for facial and body skin treatments.",
+      },
+      { name: "Massage Therapy", description: "Relaxing massage services." },
+    ];
+
+    const savedCategories = await Category.insertMany(categories);
+    console.log("Categories seeded:", savedCategories);
+
+    // Seed services
+    const services = [
+      {
+        name: "Haircut",
+        description: "Professional haircut services for men and women.",
+        price: 20,
+        duration: 30,
+        category: savedCategories[0]._id,
+      },
+      {
+        name: "Facial Treatment",
+        description: "Deep cleansing facial for glowing skin.",
+        price: 50,
+        duration: 60,
+        category: savedCategories[1]._id,
+      },
+      {
+        name: "Full Body Massage",
+        description: "Relaxing full-body massage to relieve stress.",
+        price: 80,
+        duration: 90,
+        category: savedCategories[2]._id,
+      },
+    ];
+
+    const savedServices = await Service.insertMany(services);
+    console.log("Services seeded:", savedServices);
+
+    // Seed employees
+    const employees = [
+      {
+        name: "John Doe",
+        role: "Hair Stylist",
+        email: "john.doe@example.com",
+        phone: "123-456-7890",
+      },
+      {
+        name: "Jane Smith",
+        role: "Skin Specialist",
+        email: "jane.smith@example.com",
+        phone: "987-654-3210",
+      },
+      {
+        name: "Emily Johnson",
+        role: "Massage Therapist",
+        email: "emily.johnson@example.com",
+        phone: "555-555-5555",
+      },
+    ];
+
+    const savedEmployees = await Employee.insertMany(employees);
+    console.log("Employees seeded:", savedEmployees);
+
+    // Close the database connection
+    await mongoose.disconnect();
+    console.log("Database connection closed");
+  } catch (error) {
+    console.error("Error seeding data:", error);
+    process.exit(1);
+  }
 };
 
-const seedEmployees = async () => {
-  const employees = [
-    {
-      name: "Alice",
-      availability: [
-        { date: new Date("2024-07-10T00:00:00Z"), available: true },
-        { date: new Date("2024-07-11T00:00:00Z"), available: true },
-      ],
-    },
-    {
-      name: "Bob",
-      availability: [
-        { date: new Date("2024-07-10T00:00:00Z"), available: true },
-        { date: new Date("2024-07-12T00:00:00Z"), available: true },
-      ],
-    },
-  ];
-
-  await Employee.deleteMany();
-  await Employee.insertMany(employees);
-  console.log("Employees seeded");
-};
-
-const seedUsers = async () => {
-  const users = [
-    {
-      name: "John Doe",
-      email: "john@example.com",
-      password: "password123", // Make sure this gets hashed by User model's pre-save hook
-    },
-    {
-      name: "Jane Doe",
-      email: "jane@example.com",
-      password: "password123", // Make sure this gets hashed by User model's pre-save hook
-    },
-  ];
-
-  await User.deleteMany();
-  await User.insertMany(users);
-  console.log("Users seeded");
-};
-
-const seedDatabase = async () => {
-  await connectDB();
-  await seedServices();
-  await seedEmployees();
-  await seedUsers();
-  mongoose.disconnect();
-};
-
-seedDatabase().catch((err) => console.error(err));
+seedData();

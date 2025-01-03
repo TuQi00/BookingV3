@@ -45,25 +45,33 @@ exports.getServiceById = async (req, res) => {
 };
 
 exports.getServicesByCategoryId = async (req, res) => {
-  const { categoryId } = req.params;
-  console.log("Category ID received:", categoryId); // Log categoryId
-
   try {
-    // Use `new` with `mongoose.Types.ObjectId` to ensure it's created correctly
+    const { categoryId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+      return res.status(400).json({ message: "Invalid category ID format" });
+    }
+
     const services = await Service.find({
       category: new mongoose.Types.ObjectId(categoryId),
     });
 
-    if (!services.length) {
+    if (services.length === 0) {
       return res
         .status(404)
         .json({ message: "No services found for this category" });
     }
 
-    res.status(200).json({ success: true, data: services });
+    return res.status(200).json({
+      success: true,
+      data: services,
+    });
   } catch (error) {
     console.error("Error fetching services:", error);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    return res.status(500).json({
+      message: "Server Error",
+      error: error.message,
+    });
   }
 };
 
