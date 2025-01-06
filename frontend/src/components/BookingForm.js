@@ -1,73 +1,103 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useForm } from "react-hook-form";
 import axios from "axios";
 import "../styles.css";
+import "./Calendar.css";
 import CategorySelect from "./CategorySelect";
 import ServiceSelect from "./ServiceSelect";
 import EmployeeSelect from "./EmployeeSelect";
+import Calendar from "./Calendar";
 
 const BookingForm = () => {
-  const [step, setStep] = useState(1); // Current step
-  const [email, setEmail] = useState("");
-  const [category, setCategory] = useState("");
-  const [service, setService] = useState("");
-  const [employee, setEmployee] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+  const { register, handleSubmit, setValue, watch, errors, reset } = useForm();
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [categoryDetails, setCategoryDetails] = useState(null);
   const [serviceDetails, setServiceDetails] = useState(null);
   const [employeeDetails, setEmployeeDetails] = useState(null);
+  const cache = useRef({ categories: {}, services: {}, employees: {} });
 
-  // Fetch category, service, employee details
-  const fetchDetails = async (type, id, categoryId) => {
+  const fetchDetails = useCallback(async (type, id, categoryId = null) => {
+    if (cache.current[type][id]) {
+      if (type === "categories") setCategoryDetails(cache.current[type][id]);
+      if (type === "services") setServiceDetails(cache.current[type][id]);
+      if (type === "employees") setEmployeeDetails(cache.current[type][id]);
+      return;
+    }
+
     try {
       setLoading(true);
-      let url = `http://localhost:5000/api/${type}/${id}`;
+      setError("");
 
+      if (!id) return;
+
+      let url = `http://localhost:5000/api/${type}/${id}`;
       if (type === "services" && categoryId) {
         url = `http://localhost:5000/api/services/${categoryId}/services/${id}`;
       }
 
       const response = await axios.get(url);
-
-      if (response.data.success) {
+      if (response.data && response.data.success) {
+        cache.current[type][id] = response.data.data;
         if (type === "categories") setCategoryDetails(response.data.data);
         if (type === "services") setServiceDetails(response.data.data);
         if (type === "employees") setEmployeeDetails(response.data.data);
       } else {
-        throw new Error("Failed to fetch details");
+        setError(`Failed to fetch ${type} details`);
       }
     } catch (err) {
-      console.error(`Error fetching ${type} details:`, err);
-      setError(err.response?.data?.msg || "Failed to load data");
+      setError(err.response?.data?.msg || `Error fetching ${type} details`);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
+  // Fetch category details when category changes
   useEffect(() => {
-    if (category) fetchDetails("categories", category);
-  }, [category]);
+    const category = watch("category"); // Get value from useForm hook
+    if (category) {
+      setValue("service", ""); // Reset service
+      setValue("employee", ""); // Reset employee
+      setServiceDetails(null);
+      setEmployeeDetails(null);
+      fetchDetails("categories", category);
+    } else {
+      setCategoryDetails(null);
+    }
+  }, [watch("category"), setValue, fetchDetails]);
 
+  // Fetch service details when category and service are selected
   useEffect(() => {
-    if (category && service) fetchDetails("services", service, category);
-  }, [category, service]);
+    const category = watch("category");
+    const service = watch("service");
+    if (category && service) {
+      fetchDetails("services", service, category);
+    } else {
+      setServiceDetails(null);
+    }
+  }, [watch("category"), watch("service"), setValue, fetchDetails]);
 
+  // Fetch employee details when employee changes
   useEffect(() => {
-    if (employee) fetchDetails("employees", employee);
-  }, [employee]);
+    const employee = watch("employee");
+    if (employee) {
+      fetchDetails("employees", employee);
+    } else {
+      setEmployeeDetails(null);
+    }
+  }, [watch("employee"), fetchDetails]);
 
   const handleNext = () => {
-    if (step === 1 && (!category || !service)) {
+    if (step === 1 && (!watch("category") || !watch("service"))) {
       setError("Please select a category and a service.");
       return;
     }
-    if (step === 2 && (!date || !time)) {
+    if (step === 2 && (!watch("date") || !watch("time"))) {
       setError("Please select a date and time.");
       return;
     }
-    if (step === 3 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (step === 3 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(watch("email"))) {
       setError("Invalid email format.");
       return;
     }
@@ -80,16 +110,15 @@ const BookingForm = () => {
     setError("");
   };
 
-  const handleSubmit = async () => {
+  const handleSubmitBooking = async (data) => {
     try {
       setLoading(true);
-      const bookingData = { email, category, service, employee, date, time };
       const response = await axios.post(
         "http://localhost:5000/api/bookings",
-        bookingData
+        data
       );
       if (response.data.success) {
-        setStep(5); // Booking Successful
+        setStep(5);
       } else {
         setError(response.data.msg || "Unexpected error occurred.");
       }
@@ -103,12 +132,7 @@ const BookingForm = () => {
   };
 
   const resetForm = () => {
-    setEmail("");
-    setCategory("");
-    setService("");
-    setEmployee("");
-    setDate("");
-    setTime("");
+    reset(); // Resets the form values and errors
     setStep(1);
     setError("");
     setCategoryDetails(null);
@@ -128,18 +152,17 @@ const BookingForm = () => {
         <div className={`${step === 4 ? "active" : ""}`}>Confirm</div>
       </div>
       {error && <p className="error-message">{error}</p>}
-
-      {/* Step 1: Service Selection */}
       {step === 1 && (
-        <form>
-          <CategorySelect value={category} onChange={setCategory} />
-          <ServiceSelect
-            value={service}
-            onChange={setService}
-            categoryId={category}
+        <form onSubmit={handleSubmit(handleNext)}>
+          <CategorySelect
+            value={watch("category")}
+            onChange={(val) => setValue("category", val)}
           />
-
-          {/* Thêm thông tin chi tiết dịch vụ */}
+          <ServiceSelect
+            value={watch("service")}
+            onChange={(val) => setValue("service", val)}
+            categoryId={watch("category")}
+          />
           {serviceDetails && (
             <div className="service-details">
               <p>
@@ -154,9 +177,9 @@ const BookingForm = () => {
             </div>
           )}
           <EmployeeSelect
-            value={employee}
-            onChange={setEmployee}
-            serviceId={service}
+            value={watch("employee")}
+            onChange={(val) => setValue("employee", val)}
+            serviceId={watch("service")}
           />
           <div className="button-group">
             <button type="button" onClick={handleNext}>
@@ -165,57 +188,41 @@ const BookingForm = () => {
           </div>
         </form>
       )}
-
-      {/* Step 2: Time Selection */}
       {step === 2 && (
-        <form>
-          <label>Date:</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
+        <form onSubmit={handleSubmit(handleNext)}>
+          <label>Choose Date:</label>
+          <Calendar
+            selectedDate={watch("date")}
+            setSelectedDate={(date) => setValue("date", date)}
           />
           <label>Time:</label>
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            required
-          />
+          <input type="time" {...register("time", { required: true })} />
           <div className="button-group">
             <button type="button" onClick={handlePrevious}>
               Back
             </button>
-            <button type="button" onClick={handleNext}>
-              Next
-            </button>
+            <button type="submit">Continue</button>
           </div>
         </form>
       )}
-
-      {/* Step 3: Information */}
       {step === 3 && (
-        <form>
+        <form onSubmit={handleSubmit(handleNext)}>
           <label>Email:</label>
           <input
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            {...register("email", {
+              required: true,
+              pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            })}
           />
           <div className="button-group">
             <button type="button" onClick={handlePrevious}>
               Back
             </button>
-            <button type="button" onClick={handleNext}>
-              Next
-            </button>
+            <button type="submit">Next</button>
           </div>
         </form>
       )}
-
-      {/* Step 4: Confirmation */}
       {step === 4 && (
         <div>
           <h2>Confirm Booking</h2>
@@ -235,23 +242,21 @@ const BookingForm = () => {
             <strong>Employee:</strong> {employeeDetails?.name}
           </p>
           <p>
-            <strong>Date:</strong> {date}
+            <strong>Date:</strong> {watch("date")}
           </p>
           <p>
-            <strong>Time:</strong> {time}
+            <strong>Time:</strong> {watch("time")}
           </p>
           <div className="button-group">
             <button type="button" onClick={handlePrevious}>
               Back
             </button>
-            <button type="button" onClick={handleSubmit}>
+            <button type="button" onClick={handleSubmitBooking}>
               Confirm Booking
             </button>
           </div>
         </div>
       )}
-
-      {/* Step 5: Booking Success */}
       {step === 5 && (
         <div>
           <h2>Booking Successful!</h2>
