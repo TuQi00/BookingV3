@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const ServiceSelect = ({ value, onChange, categoryId }) => {
-  const [services, setServices] = useState([]); // Change from 'subservices' to 'services'
+const ServiceSelect = ({ categoryId, value, onChange }) => {
+  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!categoryId) {
-      setServices([]); // Clear services if no categoryId
+      setServices([]);
       return;
     }
 
     setLoading(true);
-    setError(""); // Reset any previous error
+    setError("");
     axios
-      .get(`http://localhost:5000/api/services/${categoryId}/services`) // Change endpoint to match services
+      .get(`http://localhost:5000/api/services/${categoryId}/services`)
       .then((res) => {
         if (res.data.success && Array.isArray(res.data.data)) {
-          setServices(res.data.data); // Update with the actual services data
+          setServices(res.data.data);
         } else {
           console.error("Invalid API response:", res.data);
           setError("No services found");
@@ -35,25 +35,26 @@ const ServiceSelect = ({ value, onChange, categoryId }) => {
       });
   }, [categoryId]);
 
+  const handleChange = (value) => {
+    if (onChange) {
+      onChange(value);
+    }
+  };
+
   return (
     <div>
-      <label>Select Service:</label> {/* Updated label */}
       <select
+        className="select-container"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={!categoryId || loading}
+        onChange={(e) => handleChange(e.target.value)}
       >
         <option value="">Select a service</option>
         {services.length > 0 ? (
-          services.map(
-            (
-              service // Change from 'subservices' to 'services'
-            ) => (
-              <option key={service._id} value={service._id}>
-                {service.name}
-              </option>
-            )
-          )
+          services.map((service) => (
+            <option key={service._id} value={service._id}>
+              {service.name}
+            </option>
+          ))
         ) : (
           <option value="" disabled>
             No services available
@@ -61,6 +62,7 @@ const ServiceSelect = ({ value, onChange, categoryId }) => {
         )}
       </select>
       {loading && <p>Loading services...</p>}
+
       {error && <p className="error-message">{error}</p>}
     </div>
   );

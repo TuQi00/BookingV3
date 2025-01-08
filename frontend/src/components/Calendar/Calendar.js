@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import "../../styles/Calendar.css";
 
 const Calendar = ({ selectedDate, setSelectedDate }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
@@ -61,7 +62,9 @@ const Calendar = ({ selectedDate, setSelectedDate }) => {
   return (
     <div className="calendar-container">
       <div className="calendar-header">
-        <button onClick={() => handleMonthChange(-1)}>{"<"}</button>
+        <button onClick={() => handleMonthChange(-1)} className="btn-prev">
+          &#8249;
+        </button>
         <select
           value={currentMonth}
           onChange={(e) => setCurrentMonth(Number(e.target.value))}
@@ -76,13 +79,18 @@ const Calendar = ({ selectedDate, setSelectedDate }) => {
           value={currentYear}
           onChange={(e) => setCurrentYear(Number(e.target.value))}
         >
-          {Array.from({ length: 10 }, (_, i) => (
-            <option key={i} value={today.getFullYear() - 5 + i}>
-              {today.getFullYear() - 5 + i}
-            </option>
-          ))}
+          {Array.from({ length: 10 }, (_, i) => {
+            const year = today.getFullYear() + i;
+            return (
+              <option key={i} value={year}>
+                {year}
+              </option>
+            );
+          })}
         </select>
-        <button onClick={() => handleMonthChange(1)}>{">"}</button>
+        <button onClick={() => handleMonthChange(1)} className="btn-next">
+          &#8250;
+        </button>
       </div>
       <div className="calendar-grid">
         {daysInMonth.map((day, index) => (

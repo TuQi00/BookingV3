@@ -1,0 +1,16 @@
+.service-details {
+    background-color: #f3f3f3;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .service-details p {
+    margin: 8px 0;
+  }
+  
+  .service-details strong {
+    font-weight: bold;
+    color: #333;
+  }

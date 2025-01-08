@@ -1,0 +1,39 @@
+/* Global CSS Variables */
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #f39c12;
+    --success-color: #2ecc71;
+    --danger-color: #e74c3c;
+    --background-color: #f4f4f4;
+    --card-background: #ffffff;
+    --card-border-color: #dfe6e9;
+    --error-color: #f8d7da;
+    --border-radius: 12px;
+    --input-padding: 12px;
+    --input-font-size: 1rem;
+    --button-padding: 12px 26px;
+    --button-font-size: 1rem;
+    --font-family: "Roboto", Arial, sans-serif;
+    --box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Global Reset and Styles */
+  *,
+  *::before,
+  *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    overflow-x: hidden;
+  }

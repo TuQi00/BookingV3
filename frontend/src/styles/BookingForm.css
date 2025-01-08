@@ -1,0 +1,36 @@
+.booking-form {
+    width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .booking-form h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .booking-form-container {
+    width: 700px; /* Chiều rộng cố định */
+    max-width: 100%; /* Đảm bảo tính responsive nếu cần */
+    margin: 20px auto; /* Canh giữa màn hình */
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Hiệu ứng đổ bóng */
+    border-radius: 10px; /* Bo góc container */
+    background-color: #ffffff; /* Màu nền trắng */
+    overflow: hidden; /* Ngăn nội dung tràn ra ngoài container */
+    display: flex;
+    flex-direction: column; /* Xếp chồng các phần tử theo chiều dọc */
+    justify-content: space-between; /* Cân bằng khoảng cách giữa các phần */
+  }
+  
+  h2 {
+    text-align: center;
+  }
+  
+  .error-message {
+    color: red;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
